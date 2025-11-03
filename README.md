@@ -12,6 +12,12 @@ End-to-end tooling for the **complete evaluation lifecycle** of AI language mode
 
 Navigate the lifecycle with the new orchestration layer under `src/lifecycle/` and companion docs in `docs/lifecycle/`.
 
+## 🧭 Lifecycle Stage Details
+
+- **Stage 1 – Foundational Metrics**: `FoundationalEvaluationSuite` aggregates accuracy/F1, BLEU/ROUGE/BERTScore, latency sampling, and cost modelling so you can gate models before deeper testing. Outputs land in `artifacts/stage1/` for CI or dashboard ingestion.
+- **Stage 2 – Task & Domain Benchmarks**: `BenchmarkEvaluationSuite` wraps MMLU, HumanEval, and additional datasets. Configure samples, subjects, and ordering with `BenchmarkRunConfig`; results populate `artifacts/stage2/`.
+- **Stage 3 – Arena Evaluations**: `ArenaEvaluationSuite` drives LMArena-style tournaments with API-backed or local judges, producing head-to-head statistics and match metadata under `artifacts/stage3/`.
+
 ## ✨ What's Inside
 
 - **Lifecycle Orchestration**: `FoundationalEvaluationSuite`, `BenchmarkEvaluationSuite`, `ArenaEvaluationSuite`, and `EvaluationLifecyclePipeline`.
@@ -64,6 +70,17 @@ cd ../frontend && npm install
 
 The pipeline module (`src/lifecycle/pipeline.py`) stitches stages together if you want a single orchestrated run.
 
+> 💡 **Tip**: For Stage 3 you can forward matches to a real LMArena deployment with `--arena-base-url` and `--arena-api-key`, or provide `--judge-model/--judge-provider` to use an internal judge model.
+
+## 🏗 Capabilities & Engineering Practices
+
+- Multi-provider architecture with async clients, retry logic, rate limiting, and token accounting.
+- Metric coverage across performance, quality, safety readiness, latency, and cost.
+- FastAPI + PostgreSQL backend with React/Tailwind dashboard for leaderboards and visualisations.
+- Extensive evaluator library: classification QA, text quality (BLEU/ROUGE/BERTScore), cost analytics, latency benchmarking, and arena judging.
+- Type hints, Pydantic validation, structured logging, and configurability via `.env` + JSON registries.
+- Testing toolchain: pytest, pytest-asyncio, coverage reporting, Ruff, Black, and mypy.
+
 ## 📚 Documentation Map
 
 - `docs/lifecycle/overview.md` – lifecycle map.
@@ -115,9 +132,23 @@ Use `pytest tests/unit/` or `pytest tests/integration/` for targeted suites.
 4. Run formatting (`ruff`, `black`) and tests.
 5. Open a pull request.
 
+## 🗺 Roadmap Ideas
+
+- Expand Stage 2 with GSM8K, TruthfulQA, and enterprise-specific datasets.
+- Automate promotion criteria (e.g., minimum Stage 1 thresholds before Stage 2).
+- Integrate scheduled evaluations via CI/CD and surface results directly in the dashboard.
+- Support multi-judge ensembles that blend human feedback with model judges.
+
 ## 📄 License
 
 MIT License — see [LICENSE](LICENSE).
+
+## 📘 Maintainer Reference Map
+
+- Lifecycle documentation: `docs/lifecycle/`
+- Provider configuration: `config/api_keys.template.json`, `config/models_registry.json`
+- Orchestration entrypoint: `src/lifecycle/pipeline.py`
+- Dashboard backend: `dashboard/backend`, frontend: `dashboard/frontend`
 
 ## 📞 Support
 
