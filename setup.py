@@ -39,9 +39,4 @@ setup(
             "mypy>=1.8.0",
         ],
     },
-    entry_points={
-        "console_scripts": [
-            "model-eval=src.cli:main",
-        ],
-    },
 )
