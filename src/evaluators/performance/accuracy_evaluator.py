@@ -2,7 +2,7 @@
 
 import asyncio
 import time
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support

@@ -1,163 +1,113 @@
 # Project Summary: AI Model Evaluation Toolbox
 
-## Overview
+## 1. Overview
 
-A comprehensive, production-ready toolkit for evaluating and benchmarking AI language models across multiple providers with an interactive dashboard.
+The repository now presents the AI model evaluation journey as a **three-stage lifecycle**:
 
-## What Has Been Implemented
+1. **Foundational metrics** to validate correctness, safety, latency, and cost.
+2. **Task & domain benchmarks** to earn confidence on established datasets.
+3. **Arena mode (LMArena)** to capture pairwise preferences and qualitative nuance.
 
-### ✅ Complete Feature Set
+Lifecycle orchestration lives under `src/lifecycle/` with companion docs in `docs/lifecycle/`.
 
-#### 1. Core Evaluation Framework
-- **Performance Metrics**: Accuracy, precision, recall, F1 score
-- **Cost Analysis**: Token counting, pricing calculation, cost efficiency
-- **Speed Benchmarks**: Latency, throughput, tokens per second
-- **Quality Metrics**: BLEU, ROUGE, BERTScore
-- **Safety Evaluation**: Framework ready for toxicity and bias testing
+## 2. Lifecycle Highlights
 
-#### 2. Multi-Provider Support
-- ✅ OpenAI (GPT-4, GPT-3.5, etc.)
-- ✅ Anthropic (Claude 3 family)
-- ✅ Google (Gemini 1.5 Pro/Flash)
-- ✅ Cohere (Command R+)
-- 🔧 Extensible architecture for adding more providers
+### Stage 1 – Foundational Metrics
+- `FoundationalEvaluationSuite` aggregates accuracy/F1, BLEU/ROUGE/BERTScore, latency, and cost checks.
+- Smoke-test datasets shipped in `examples/lifecycle/stage1_foundational_metrics.py`.
+- Results persist to `artifacts/stage1` for dashboard ingestion or CI gating.
 
-#### 3. Standard Benchmarks
-- ✅ MMLU (Massive Multitask Language Understanding)
-- ✅ HumanEval (Code generation)
-- 🔧 Framework ready for additional benchmarks
+### Stage 2 – Task & Domain Benchmarks
+- `BenchmarkEvaluationSuite` wraps MMLU, HumanEval, and forthcoming benchmarks.
+- Configurable via `BenchmarkRunConfig` for subject selection and sample counts.
+- Example runner (`examples/lifecycle/stage2_task_benchmarks.py`) demonstrates multi-benchmark execution.
 
-#### 4. Professional Dashboard
-- ✅ React + TypeScript frontend with Tailwind CSS
-- ✅ FastAPI backend with PostgreSQL
-- ✅ Sortable leaderboard with filtering
-- ✅ Side-by-side model comparison
-- ✅ Real-time statistics dashboard
-- ✅ Cost efficiency rankings
+### Stage 3 – Arena Evaluations (LMArena)
+- `LMArenaEvaluator` supports real API submissions (via `LMArenaClient`) or local judge fallbacks.
+- `ArenaEvaluationSuite` coordinates candidate vs. baseline tournaments with optional judge models.
+- Example script `examples/lifecycle/stage3_lmarena_simulation.py` generates head-to-head reports.
 
-#### 5. Runnable Examples
-- ✅ Basic accuracy evaluation
-- ✅ Cost analysis and comparison
-- ✅ Quality metrics evaluation
-- ✅ Comparative benchmarking
-- ✅ MMLU benchmark runner
-- 🔧 Templates for custom evaluations
+## 3. Additional Capabilities
 
-#### 6. Best Practices
-- ✅ Type hints and Pydantic validation
-- ✅ Async/await support
-- ✅ Structured logging
-- ✅ Retry logic with exponential backoff
-- ✅ Rate limiting
-- ✅ Comprehensive error handling
-- ✅ Unit and integration tests
-- ✅ Pre-commit hooks
-- ✅ CI/CD pipeline (GitHub Actions)
+- **Multi-Provider Clients**: OpenAI, Anthropic, Google, Cohere. Extensible via `src/providers/factory.py`.
+- **Dashboard**: FastAPI + React app with leaderboards, filters, and cost efficiency views.
+- **Cost Analysis**: `CostAnalyzer` leverages `config/models_registry.json` for price modeling.
+- **Token Utilities**: Shared token counting and retry helpers under `src/utils/`.
+- **Testing & Quality**: pytest, pytest-asyncio, Ruff, Black, and mypy integrations.
 
-## Project Structure
+## 4. Project Structure
 
 ```
 Model_Evaluation_Toolbox/
-├── config/                          # Configuration files
-│   ├── api_keys.template.json       # API keys template
-│   └── models_registry.json         # Model definitions & pricing
-├── src/                             # Core source code
-│   ├── providers/                   # API clients (OpenAI, Anthropic, etc.)
-│   ├── evaluators/                  # Evaluation framework
-│   │   ├── performance/             # Accuracy evaluators
-│   │   ├── cost/                    # Cost analysis
-│   │   ├── speed/                   # Latency benchmarks
-│   │   └── quality/                 # Text quality metrics
-│   ├── benchmarks/                  # Standard benchmarks (MMLU, HumanEval)
-│   └── utils/                       # Utilities (logging, token counting)
-├── dashboard/                       # Web dashboard
-│   ├── backend/                     # FastAPI server
-│   └── frontend/                    # React application
-├── examples/                        # Runnable examples
-├── tests/                           # Test suite
-└── docs/                            # Documentation
+├── config/                          # Model registry & API key templates
+├── docs/
+│   └── lifecycle/                   # Lifecycle overview + stage briefs
+├── examples/
+│   └── lifecycle/                   # Stage-aligned runnable scripts
+├── src/
+│   ├── lifecycle/                   # Orchestrators and pipeline
+│   ├── evaluators/                  # Metric suites (performance/cost/quality/speed/arena)
+│   ├── benchmarks/                  # MMLU, HumanEval, etc.
+│   ├── providers/                   # API clients
+│   └── utils/                       # Logging, token counting, retry, ...
+├── dashboard/                       # FastAPI backend + React frontend
+├── tests/                           # Unit & integration tests
+└── artifacts/                       # Generated reports (created at runtime)
 ```
 
-## Quick Start (For You)
+## 5. Quick Start for Maintainers
 
-### 1. Setup Environment
-
+### Environment
 ```bash
-# Navigate to project
-cd Model_Evaluation_Toolbox
-
-# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# Install dependencies
+source venv/bin/activate
 pip install -r requirements.txt
 pip install -e .
 ```
 
-### 2. Configure API Keys
-
+### API Keys
 ```bash
-# Copy template
 cp .env.template .env
-
-# Edit and add your API keys
-nano .env
 ```
+Populate provider keys and optional database URL.
 
-Add your keys:
+### Lifecycle Commands
 ```bash
-OPENAI_API_KEY=your_openai_key
-ANTHROPIC_API_KEY=your_anthropic_key
-GOOGLE_API_KEY=your_google_key
-COHERE_API_KEY=your_cohere_key
-DATABASE_URL=postgresql://user:pass@localhost/model_eval_db
+# Stage 1
+python examples/lifecycle/stage1_foundational_metrics.py \
+  --model gpt-4-turbo-2024-04-09 --provider openai
+
+# Stage 2
+python examples/lifecycle/stage2_task_benchmarks.py \
+  --model gpt-4-turbo-2024-04-09 --provider openai --benchmarks mmlu humaneval
+
+# Stage 3 (local simulation or real LMArena via --arena-base-url)
+python examples/lifecycle/stage3_lmarena_simulation.py \
+  --candidate-model gpt-4-turbo-2024-04-09 --baseline-model claude-3-sonnet-20240229
 ```
 
-### 3. Setup Database
-
+### Dashboard
 ```bash
-# Create PostgreSQL database
-createdb model_eval_db
-
-# The tables will be created automatically on first run
+cd dashboard/backend && uvicorn app.main:app --reload
+cd dashboard/frontend && npm start
 ```
+Visit `http://localhost:3000`.
 
-### 4. Run Examples
+## 6. Roadmap Ideas
 
-```bash
-# Basic evaluation
-cd examples/01_basic_evaluation
-python run_basic_evaluation.py
+- Expand Stage 2 with GSM8K, TruthfulQA, and custom enterprise datasets.
+- Add automated promotion criteria (e.g., minimum Stage 1 thresholds before Stage 2).
+- Integrate continuous evaluation jobs with GitHub Actions and dashboard webhooks.
+- Support multi-judge ensembles (human + AI) in Stage 3.
 
-# Cost analysis
-cd ../02_cost_analysis
-python run_cost_analysis.py
+## 7. References
 
-# MMLU benchmark
-cd ../06_standard_benchmarks
-python run_mmlu_benchmark.py
-```
+- `README.md` – lifecycle overview and quick commands.
+- `docs/lifecycle/*` – deep dives into each stage.
+- `QUICKSTART.md` – concise installation + first run steps.
+- `config/models_registry.json` – pricing and model metadata used across stages.
 
-### 5. Start Dashboard
-
-**Terminal 1 - Backend:**
-```bash
-cd dashboard/backend
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-**Terminal 2 - Frontend:**
-```bash
-cd dashboard/frontend
-npm install
-npm start
-```
-
-Access at: http://localhost:3000
-
-## Key Features Highlights
+The repository is now aligned around the lifecycle narrative, making it easier to communicate evaluation coverage and extend each stage independently.
 
 ### 🎯 Leaderboard with Sorting
 - Sort by accuracy, latency, cost, quality, efficiency

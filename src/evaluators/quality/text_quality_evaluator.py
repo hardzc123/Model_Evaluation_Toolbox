@@ -2,7 +2,7 @@
 
 import asyncio
 import time
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction

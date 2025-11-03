@@ -1,162 +1,101 @@
 # Quick Start Guide
 
-Get started with the Model Evaluation Toolbox in 5 minutes!
+Get the lifecycle-focused Model Evaluation Toolbox running in minutes.
 
 ## Prerequisites
 
-- Python 3.10 or higher
-- PostgreSQL 13 or higher
-- Node.js 18+ (for dashboard)
-- API keys for the models you want to evaluate
+- Python 3.10+
+- Provider API keys (OpenAI, Anthropic, Google, Cohere, ...)
+- Optional (for dashboard): PostgreSQL 13+, Node.js 18+
 
-## Step 1: Clone and Setup
+## 1. Clone & Install
 
 ```bash
 git clone <repository-url>
 cd Model_Evaluation_Toolbox
 
-# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# Install dependencies
 pip install -r requirements.txt
 pip install -e .
 ```
 
-## Step 2: Configure API Keys
+## 2. Configure Credentials
 
 ```bash
-# Copy environment template
 cp .env.template .env
-
-# Edit .env and add your API keys
-nano .env
 ```
 
-Add your keys:
-```bash
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
+Populate `.env` (or `config/api_keys.json`) with the API keys you need:
+
+```
+OPENAI_API_KEY=...
+ANTHROPIC_API_KEY=...
 GOOGLE_API_KEY=...
 COHERE_API_KEY=...
 ```
 
-## Step 3: Setup Database
+## 3. Run the Lifecycle
+
+### Stage 1 — Foundational Metrics
+Quick smoke test for accuracy, quality, latency, and cost.
 
 ```bash
-# Create PostgreSQL database
-createdb model_eval_db
-
-# Update DATABASE_URL in .env
-DATABASE_URL=postgresql://username:password@localhost:5432/model_eval_db
+python examples/lifecycle/stage1_foundational_metrics.py \
+  --model gpt-4-turbo-2024-04-09 \
+  --provider openai
 ```
 
-## Step 4: Run Your First Evaluation
+Outputs a JSON report in `artifacts/stage1/`.
+
+### Stage 2 — Benchmarks
+Execute MMLU, HumanEval, and additional datasets.
 
 ```bash
-# Run a basic evaluation example
-cd examples/01_basic_evaluation
-python run_basic_evaluation.py
+python examples/lifecycle/stage2_task_benchmarks.py \
+  --model gpt-4-turbo-2024-04-09 \
+  --provider openai \
+  --benchmarks mmlu humaneval
 ```
 
-You should see output like:
-```
-Basic Model Evaluation Example
-======================================================================
+Outputs per-benchmark metrics in `artifacts/stage2/`.
 
-1. Initializing OpenAI client...
-2. Creating accuracy evaluator...
-3. Evaluating on 8 questions...
-
-======================================================================
-RESULTS
-======================================================================
-
-Model: gpt-3.5-turbo
-Provider: openai
-Duration: 5.23 seconds
-
-Metrics:
-  Exact Match Accuracy: 87.50%
-  Partial Match Accuracy: 100.00%
-```
-
-## Step 5: Try Cost Analysis
+### Stage 3 — LMArena Battles
+Compare candidate vs. baseline with local judges or LMArena API.
 
 ```bash
-cd examples/02_cost_analysis
-python run_cost_analysis.py
+python examples/lifecycle/stage3_lmarena_simulation.py \
+  --candidate-model gpt-4-turbo-2024-04-09 \
+  --candidate-provider openai \
+  --baseline-model claude-3-sonnet-20240229 \
+  --baseline-provider anthropic
 ```
 
-This will show you cost comparisons across different models.
+Produces arena results in `artifacts/stage3/`.
 
-## Step 6: Start the Dashboard
+> Tip: Pass `--arena-base-url` and `--arena-api-key` to forward matches to a real LMArena deployment, or provide `--judge-model` to use an AI judge.
 
-### Backend:
+## 4. (Optional) Launch the Dashboard
 
 ```bash
+# Backend
 cd dashboard/backend
-pip install -r requirements.txt
 uvicorn app.main:app --reload
-```
 
-Backend will run at `http://localhost:8000`
-
-### Frontend:
-
-```bash
-cd dashboard/frontend
+# Frontend
+cd ../frontend
 npm install
 npm start
 ```
 
-Frontend will open at `http://localhost:3000`
+Visit `http://localhost:3000` to visualise benchmark and arena outputs.
 
-## Step 7: View the Dashboard
+## 5. Next Steps
 
-Open your browser to `http://localhost:3000` and explore:
-
-- **Dashboard**: Overview of your evaluations
-- **Leaderboard**: Model rankings with sorting and filtering
-- **Compare Models**: Side-by-side comparison
-
-## Next Steps
-
-### Run More Examples
-
-```bash
-# Quality metrics
-cd examples/03_quality_metrics
-python run_quality_evaluation.py
-
-# Standard benchmarks (MMLU)
-cd examples/06_standard_benchmarks
-python run_mmlu_benchmark.py
-```
-
-### Customize Evaluations
-
-Create your own evaluation script:
-
-```python
-from src.providers import get_client
-from src.evaluators.performance import AccuracyEvaluator
-from src.evaluators.performance.accuracy_evaluator import QAExample
-
-# Your custom dataset
-dataset = [
-    QAExample(question="Your question?", correct_answer="Answer"),
-    # Add more...
-]
-
-# Evaluate
-client = get_client("openai")
-evaluator = AccuracyEvaluator(client=client, model="gpt-4")
-result = evaluator.evaluate_sync(dataset)
-
-print(f"Accuracy: {result.metrics['accuracy']:.2%}")
-```
+- Explore `docs/lifecycle/` for configuration details per stage.
+- Customize datasets and prompts to mirror production workloads.
+- Wire the pipeline (`src/lifecycle/pipeline.py`) into CI to guard model promotions.
 
 ### Compare Multiple Models
 
